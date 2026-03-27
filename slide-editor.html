@@ -440,16 +440,28 @@
   }
   .bt-rank { display: inline-block; font-size: 10px; font-weight: 600; color: #888; background: #f5f5f5; border-radius: 4px; padding: 2px 6px; margin-top: 6px; }
 
-  /* ── INSIGHTS MODAL ─────────────────────────── */
-  .modal-backdrop {
+  /* ── INSIGHTS POPOVER ───────────────────────── */
+  .insights-popover {
     display: none;
-    position: fixed; inset: 0;
-    background: rgba(0,0,0,0.45);
+    position: fixed;
+    top: 64px;
+    right: 16px;
     z-index: 2000;
-    align-items: center;
-    justify-content: center;
   }
-  .modal-backdrop.open { display: flex; }
+  .insights-popover.open { display: block; }
+  /* small caret pointing up toward the icon */
+  .insights-popover::before {
+    content: '';
+    position: absolute;
+    top: -6px; right: 18px;
+    width: 12px; height: 12px;
+    background: #fff;
+    border-left: 1px solid #e0e0e0;
+    border-top: 1px solid #e0e0e0;
+    transform: rotate(45deg);
+    border-radius: 2px;
+  }
+  /* repurpose .modal as the card inside */
 
   .modal {
     background: #fff;
@@ -705,6 +717,9 @@
     <button class="btn-icon" title="Preview">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
     </button>
+    <button class="btn-icon" id="btnInsights" title="Insights" onclick="toggleInsightsPopover()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+    </button>
     <button class="btn-start" id="btnPresent" onclick="startPresentation()">
       Start presentation
       <span class="divider"></span>
@@ -758,7 +773,7 @@
 <div class="bar-tooltip" id="barTooltip"></div>
 
 <!-- INSIGHTS MODAL -->
-<div class="modal-backdrop" id="insightsModal" onclick="if(event.target===this)closeInsights()">
+<div class="insights-popover" id="insightsModal">
   <div class="modal">
     <div class="modal-header">
       <div class="modal-meta">
@@ -1037,6 +1052,11 @@ function renderFileDropdownItems() {
 document.addEventListener('click', e => {
   if (!document.getElementById('fileDropdown').contains(e.target)) {
     toggleFileDropdown(false);
+  }
+  const popover = document.getElementById('insightsModal');
+  const btn = document.getElementById('btnInsights');
+  if (popover.classList.contains('open') && !popover.contains(e.target) && !btn.contains(e.target)) {
+    closeInsights();
   }
 });
 
@@ -1349,14 +1369,23 @@ function startPresentation() {
 function stopPresentation() {
   document.getElementById('presentOverlay').style.display = 'none';
   if (document.fullscreenElement) document.exitFullscreen?.();
-  setTimeout(() => {
+  // Insights now accessed via the topbar icon
+}
+
+function toggleInsightsPopover() {
+  const popover = document.getElementById('insightsModal');
+  const btn = document.getElementById('btnInsights');
+  const isOpen = popover.classList.contains('open');
+  popover.classList.toggle('open', !isOpen);
+  btn.classList.toggle('active', !isOpen);
+  if (!isOpen) {
     document.getElementById('modalTitle').textContent = FILES[currentFileIndex].name;
-    document.getElementById('insightsModal').classList.add('open');
-  }, 2000);
+  }
 }
 
 function closeInsights() {
   document.getElementById('insightsModal').classList.remove('open');
+  document.getElementById('btnInsights').classList.remove('active');
 }
 
 function openInsightsHome() {
