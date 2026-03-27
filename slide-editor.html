@@ -1,0 +1,1438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Slide Creator</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #ebebeb;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    color: #1a1a1a;
+  }
+
+  /* ── TOP BAR ─────────────────────────────────── */
+  .topbar {
+    height: 56px;
+    background: #fff;
+    border-bottom: 1px solid #d8d8d8;
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    gap: 12px;
+    z-index: 100;
+    flex-shrink: 0;
+  }
+  .topbar-left { display: flex; align-items: center; gap: 10px; flex: 1; }
+  .topbar-right { display: flex; align-items: center; gap: 10px; margin-left: auto; }
+
+  .btn-icon {
+    width: 34px; height: 34px;
+    border: none; background: none; cursor: pointer;
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    color: #666;
+    transition: background 0.15s;
+  }
+  .btn-icon:hover { background: #f0f0f0; }
+
+  /* File dropdown */
+  .file-dropdown { position: relative; }
+  .fd-trigger {
+    background: none; border: none; cursor: pointer;
+    display: flex; align-items: center; gap: 8px;
+    padding: 4px 6px; border-radius: 6px;
+    transition: background 0.15s;
+    text-align: left;
+  }
+  .fd-trigger:hover { background: #f0f0f0; }
+  .ih-topbar .fd-trigger:hover { background: #f5f5f5; }
+  .fd-name { font-size: 14px; font-weight: 600; color: #1a1a1a; }
+  .fd-sub { font-size: 11px; color: #999; margin-top: 1px; }
+  .fd-chevron { color: #aaa; flex-shrink: 0; transition: transform 0.15s; }
+  .file-dropdown.open .fd-chevron { transform: rotate(180deg); }
+
+  .fd-menu {
+    display: none; position: absolute;
+    top: calc(100% + 6px); left: 0;
+    background: #fff; border: 1px solid #e0e0e0;
+    border-radius: 10px; width: 280px;
+    box-shadow: 0 6px 24px rgba(0,0,0,0.1);
+    z-index: 200; overflow: hidden;
+  }
+  .file-dropdown.open .fd-menu { display: block; }
+
+  .fd-menu-header {
+    padding: 10px 14px 6px;
+    font-size: 10px; font-weight: 700; color: #bbb;
+    text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .fd-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 14px; cursor: pointer;
+    transition: background 0.12s;
+    border-top: 1px solid #f5f5f5;
+  }
+  .fd-item:hover { background: #f7f7f7; }
+  .fd-item.active { background: #f0f0f0; }
+  .fd-item-left { display: flex; flex-direction: column; gap: 2px; }
+  .fd-item-name { font-size: 13px; font-weight: 600; color: #222; }
+  .fd-item-meta { font-size: 11px; color: #aaa; }
+  .fd-item-check { color: #555; font-size: 14px; }
+
+  .btn-start {
+    background: #333; color: #fff;
+    border: none; border-radius: 6px;
+    padding: 8px 16px; font-size: 13px; font-weight: 600;
+    cursor: pointer; display: flex; align-items: center; gap: 8px;
+    transition: background 0.15s;
+  }
+  .btn-start:hover { background: #111; }
+  .btn-start .divider { width: 1px; height: 16px; background: rgba(255,255,255,0.3); }
+  .btn-start .arrow { font-size: 10px; color: rgba(255,255,255,0.7); }
+
+  .avatar {
+    width: 30px; height: 30px; border-radius: 50%;
+    background: #aaa;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 12px; font-weight: 700;
+    cursor: pointer;
+  }
+
+  /* ── MAIN LAYOUT ─────────────────────────────── */
+  .main {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  /* ── LEFT PANEL ──────────────────────────────── */
+  .left-panel {
+    width: 192px;
+    background: #e4e4e4;
+    border-right: 1px solid #d0d0d0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+  .btn-new-slide {
+    margin: 12px;
+    padding: 9px 14px;
+    background: #333;
+    color: #fff;
+    border: none; border-radius: 6px;
+    font-size: 12px; font-weight: 600;
+    cursor: pointer;
+    display: flex; align-items: center; gap: 6px;
+    transition: background 0.15s;
+  }
+  .btn-new-slide:hover { background: #111; }
+
+  .slides-list {
+    flex: 1; overflow-y: auto;
+    padding: 0 8px 8px;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .slides-list::-webkit-scrollbar { width: 4px; }
+  .slides-list::-webkit-scrollbar-thumb { background: #bbb; border-radius: 2px; }
+
+  .slide-thumb-wrap {
+    display: flex; align-items: flex-start; gap: 6px;
+    cursor: pointer;
+  }
+  .slide-num {
+    font-size: 10px; color: #999;
+    padding-top: 8px; min-width: 14px; text-align: right;
+  }
+  .slide-thumb {
+    flex: 1;
+    aspect-ratio: 16/9;
+    background: #fff;
+    border: 2px solid #ccc;
+    border-radius: 5px;
+    overflow: hidden;
+    position: relative;
+    transition: border-color 0.15s;
+  }
+  .slide-thumb.selected { border-color: #555; }
+  .slide-thumb:hover:not(.selected) { border-color: #999; }
+
+  .thumb-content {
+    width: 100%; height: 100%;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 6px; gap: 3px;
+  }
+  .thumb-question {
+    font-size: 5px; color: #bbb;
+    text-align: center; line-height: 1.2;
+    overflow: hidden; max-height: 20px;
+  }
+  .thumb-bars { display: flex; gap: 2px; align-items: flex-end; height: 12px; }
+  .thumb-bar { width: 8px; border-radius: 1px 1px 0 0; }
+  .thumb-icon { font-size: 13px; color: #ccc; }
+
+  /* ── CENTER AREA ─────────────────────────────── */
+  .center-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: #e0e0e0;
+  }
+
+  .slide-canvas-wrap {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 28px 16px;
+    overflow: hidden;
+  }
+
+  .slide-canvas {
+    background: #fff;
+    border-radius: 6px;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.10);
+    aspect-ratio: 16/9;
+    height: 100%;
+    width: auto;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    padding: 40px 48px 32px;
+    overflow: hidden;
+  }
+
+  .slide-logo {
+    position: absolute; top: 14px; right: 18px;
+    font-size: 12px; font-weight: 700; color: #aaa;
+    display: flex; align-items: center; gap: 4px;
+    letter-spacing: -0.3px;
+  }
+
+  .slide-question-input {
+    border: none; outline: none;
+    font-size: clamp(18px, 3.5vw, 36px);
+    font-weight: 400;
+    color: #ccc;
+    background: transparent;
+    width: 100%;
+    resize: none;
+    line-height: 1.3;
+    flex-shrink: 0;
+    font-family: inherit;
+    cursor: text;
+  }
+  .slide-question-input:focus { color: #333; }
+  .slide-question-input:not(:placeholder-shown) { color: #333; }
+
+  .slide-desc-input {
+    border: none; outline: none;
+    font-size: clamp(12px, 1.8vw, 18px);
+    color: #bbb;
+    background: transparent;
+    width: 100%;
+    margin-top: 8px;
+    font-family: inherit;
+    flex-shrink: 0;
+  }
+  .slide-desc-input:focus { color: #666; }
+  .slide-desc-input:not(:placeholder-shown) { color: #666; }
+
+  /* Options / chart area */
+  .options-area { margin-top: auto; padding-top: 16px; }
+
+  .options-chart {
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+    height: clamp(80px, 14vw, 160px);
+  }
+
+  .option-col {
+    flex: 1;
+    display: flex; flex-direction: column;
+    align-items: center;
+    height: 100%;
+    justify-content: flex-end;
+    position: relative;
+  }
+
+  .option-count {
+    font-size: clamp(11px, 1.4vw, 15px);
+    font-weight: 500; color: #555;
+    margin-bottom: 4px;
+    flex-shrink: 0;
+  }
+
+  .option-bar {
+    width: 100%;
+    border-radius: 5px 5px 0 0;
+    flex-shrink: 0;
+    transition: height 0.3s, filter 0.15s, transform 0.15s;
+  }
+  .option-col:hover .option-bar {
+    filter: brightness(1.3);
+    transform: scaleX(1.04);
+    transform-origin: center bottom;
+  }
+
+  /* Grayscale bar fills — varying shades */
+  .option-col:nth-child(1) .option-bar { background: #333; }
+  .option-col:nth-child(2) .option-bar { background: #666; }
+  .option-col:nth-child(3) .option-bar { background: #999; }
+  .option-col:nth-child(4) .option-bar { background: #444; }
+  .option-col:nth-child(5) .option-bar { background: #777; }
+  .option-col:nth-child(6) .option-bar { background: #aaa; }
+
+  .option-label-input {
+    border: none; outline: none;
+    font-size: clamp(10px, 1.2vw, 13px);
+    color: #777;
+    background: transparent;
+    width: 100%;
+    text-align: center;
+    font-family: inherit;
+    border-bottom: 1px solid transparent;
+    padding: 5px 0 2px;
+    transition: border-color 0.15s;
+  }
+  .option-label-input:focus { border-bottom-color: #999; color: #333; }
+
+  .option-remove {
+    position: absolute; top: 0; right: 0;
+    background: none; border: none;
+    color: #ccc; font-size: 12px;
+    cursor: pointer; display: none; line-height: 1;
+  }
+  .option-col:hover .option-remove { display: block; }
+  .option-remove:hover { color: #555; }
+
+  .chart-baseline {
+    width: 100%; height: 1px;
+    background: #ddd; margin-bottom: 2px;
+    flex-shrink: 0;
+  }
+
+  .add-option-btn {
+    background: none; border: 1px dashed #ccc;
+    border-radius: 5px;
+    padding: 4px 12px;
+    font-size: 11px; color: #aaa;
+    cursor: pointer; margin-top: 6px;
+    display: inline-flex; align-items: center; gap: 4px;
+    transition: all 0.15s;
+  }
+  .add-option-btn:hover { border-color: #888; color: #555; background: #f5f5f5; }
+
+  .slide-thumbsup {
+    position: absolute; bottom: 14px; right: 18px;
+    font-size: 16px; color: #ddd;
+    filter: grayscale(1);
+  }
+
+  /* Slide type: heading */
+  .slide-canvas[data-type="title"] .options-area { display: none; }
+  .slide-canvas[data-type="title"] .slide-question-input {
+    font-size: clamp(22px, 4vw, 48px); font-weight: 700; color: #555;
+  }
+  .slide-canvas[data-type="title"] .slide-question-input::placeholder { color: #ddd; }
+
+  /* ── PARTICIPANT PANEL ───────────────────────── */
+  .participant-panel {
+    position: absolute; top: 14px; right: 14px;
+    background: rgba(255,255,255,0.97);
+    border: 1px solid #e8e8e8;
+    border-radius: 10px;
+    padding: 11px 13px;
+    width: 178px;
+    box-shadow: 0 2px 14px rgba(0,0,0,0.08);
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.2s;
+    z-index: 10;
+  }
+  .slide-canvas:hover .participant-panel { opacity: 1; }
+
+  .pp-stat {
+    display: flex; align-items: center; gap: 5px;
+    font-size: 11px; font-weight: 600; color: #333;
+    margin-bottom: 8px;
+  }
+  .pp-stat svg { color: #888; flex-shrink: 0; }
+  .pp-divider { height: 1px; background: #f0f0f0; margin: 8px 0; }
+  .pp-avatars { display: flex; align-items: center; gap: -4px; margin-bottom: 8px; }
+  .pp-avatar {
+    width: 22px; height: 22px; border-radius: 50%;
+    background: #ccc; border: 2px solid #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 8px; font-weight: 700; color: #fff;
+    margin-right: -5px; flex-shrink: 0;
+  }
+  .pp-avatar:nth-child(2) { background: #aaa; }
+  .pp-avatar:nth-child(3) { background: #888; }
+  .pp-avatar:nth-child(4) { background: #999; }
+  .pp-avatar:nth-child(5) { background: #bbb; }
+  .pp-more {
+    width: 22px; height: 22px; border-radius: 50%;
+    background: #f0f0f0; border: 2px solid #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 8px; font-weight: 700; color: #888;
+    margin-left: 8px;
+  }
+  .pp-row {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 10px; color: #888; margin-top: 4px;
+  }
+  .pp-row span:first-child { color: #555; }
+
+  /* ── THUMB TOOLTIP ──────────────────────────── */
+  .thumb-tooltip {
+    position: fixed;
+    background: #222;
+    color: #fff;
+    border-radius: 6px;
+    padding: 7px 11px;
+    font-size: 11px;
+    line-height: 1.5;
+    pointer-events: none;
+    z-index: 500;
+    display: none;
+    white-space: nowrap;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  }
+  .thumb-tooltip strong { display: block; font-size: 12px; margin-bottom: 1px; }
+
+  /* ── BAR TOOLTIP ─────────────────────────────── */
+  .bar-tooltip {
+    position: fixed;
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 13px 15px;
+    width: 210px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+    pointer-events: none;
+    z-index: 500;
+    display: none;
+    font-size: 12px;
+  }
+  .bt-header { display: flex; align-items: center; gap: 7px; margin-bottom: 8px; }
+  .bt-dot { width: 9px; height: 9px; border-radius: 3px; flex-shrink: 0; }
+  .bt-name { font-weight: 700; color: #222; font-size: 12px; }
+  .bt-big { font-size: 20px; font-weight: 700; color: #111; margin-bottom: 2px; }
+  .bt-sub { font-size: 10px; color: #888; margin-bottom: 10px; }
+  .bt-divider { height: 1px; background: #f0f0f0; margin: 8px 0; }
+  .bt-label { font-size: 10px; font-weight: 600; color: #aaa; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 6px; }
+  .bt-people { display: flex; flex-direction: column; gap: 4px; }
+  .bt-person { display: flex; align-items: center; gap: 6px; font-size: 11px; color: #444; }
+  .bt-person-dot {
+    width: 18px; height: 18px; border-radius: 50%;
+    background: #ddd; display: flex; align-items: center; justify-content: center;
+    font-size: 7px; font-weight: 700; color: #666; flex-shrink: 0;
+  }
+  .bt-rank { display: inline-block; font-size: 10px; font-weight: 600; color: #888; background: #f5f5f5; border-radius: 4px; padding: 2px 6px; margin-top: 6px; }
+
+  /* ── INSIGHTS MODAL ─────────────────────────── */
+  .modal-backdrop {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.45);
+    z-index: 2000;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-backdrop.open { display: flex; }
+
+  .modal {
+    background: #fff;
+    border-radius: 14px;
+    width: 480px;
+    max-width: calc(100vw - 40px);
+    max-height: calc(100vh - 60px);
+    overflow-y: auto;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.18);
+    display: flex; flex-direction: column;
+  }
+  .modal::-webkit-scrollbar { width: 4px; }
+  .modal::-webkit-scrollbar-thumb { background: #ddd; border-radius: 2px; }
+
+  .modal-header {
+    background: #f0f0f0;
+    border-radius: 14px 14px 0 0;
+    padding: 20px 20px 18px;
+    position: relative;
+  }
+  .modal-meta {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 11px; color: #888;
+    margin-bottom: 10px;
+    font-weight: 500;
+  }
+  .modal-live-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: #888; display: inline-block;
+  }
+  .modal-title {
+    font-size: 22px; font-weight: 700; color: #111;
+    margin-bottom: 10px;
+  }
+  .modal-stats {
+    display: flex; gap: 18px;
+  }
+  .modal-stat {
+    display: flex; align-items: center; gap: 5px;
+    font-size: 12px; color: #666;
+  }
+  .modal-close {
+    position: absolute; top: 16px; right: 16px;
+    background: none; border: none; cursor: pointer;
+    color: #999; font-size: 18px; line-height: 1;
+  }
+  .modal-close:hover { color: #333; }
+
+  .modal-body { padding: 20px; display: flex; flex-direction: column; gap: 22px; }
+
+  .modal-section-label {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 11px; font-weight: 700; color: #555;
+    text-transform: uppercase; letter-spacing: 0.6px;
+    margin-bottom: 8px;
+  }
+  .modal-summary-text {
+    font-size: 13px; color: #555; line-height: 1.6;
+  }
+
+  .modal-findings { display: flex; flex-direction: column; gap: 10px; }
+  .modal-finding {
+    display: flex; align-items: flex-start; gap: 10px;
+  }
+  .finding-num {
+    width: 22px; height: 22px; border-radius: 50%;
+    background: #ebebeb; color: #555;
+    font-size: 11px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; margin-top: 1px;
+  }
+  .modal-finding span { font-size: 13px; color: #333; line-height: 1.5; }
+
+  .modal-steps { display: flex; flex-direction: column; gap: 8px; }
+  .modal-step {
+    display: flex; align-items: center; gap: 12px;
+    border: 1px solid #e0e0e0; border-radius: 8px;
+    padding: 12px 14px; cursor: pointer;
+    transition: background 0.15s;
+  }
+  .modal-step:hover { background: #f7f7f7; }
+  .step-icon {
+    width: 36px; height: 36px; border-radius: 8px;
+    background: #ebebeb;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; flex-shrink: 0;
+    filter: grayscale(1);
+  }
+  .step-text { flex: 1; }
+  .step-text strong { display: block; font-size: 13px; color: #222; margin-bottom: 2px; }
+  .step-text span { font-size: 11px; color: #888; }
+  .step-arrow { color: #bbb; font-size: 14px; }
+
+  .modal-cta {
+    background: #333; color: #fff;
+    border: none; border-radius: 8px;
+    padding: 14px; font-size: 14px; font-weight: 600;
+    width: 100%; cursor: pointer;
+    font-family: inherit;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    transition: background 0.15s;
+  }
+  .modal-cta:hover { background: #111; }
+
+  /* ── INSIGHTS HOME ───────────────────────────── */
+  .ih-backdrop {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 3000;
+    align-items: center; justify-content: center;
+  }
+  .ih-backdrop.open { display: flex; }
+
+  .ih-modal {
+    background: #f5f5f5;
+    border-radius: 14px;
+    width: 92vw; height: 90vh;
+    display: flex; flex-direction: column;
+    box-shadow: 0 12px 60px rgba(0,0,0,0.22);
+    overflow: hidden;
+  }
+
+  .ih-topbar {
+    background: #fff;
+    border-bottom: 1px solid #e0e0e0;
+    padding: 0 28px;
+    height: 56px;
+    display: flex; align-items: center; justify-content: space-between;
+    flex-shrink: 0;
+  }
+  .ih-topbar-left { display: flex; align-items: center; gap: 10px; }
+  .ih-eyebrow { font-size: 10px; font-weight: 600; color: #aaa; text-transform: uppercase; letter-spacing: 0.6px; }
+  .ih-title { font-size: 15px; font-weight: 700; color: #111; }
+  .ih-close {
+    background: none; border: none; cursor: pointer;
+    color: #999; font-size: 20px; line-height: 1;
+  }
+  .ih-close:hover { color: #333; }
+
+  .ih-statsbar {
+    background: #fff;
+    border-bottom: 1px solid #e8e8e8;
+    padding: 0 28px;
+    height: 52px;
+    display: flex; align-items: center; gap: 32px;
+    flex-shrink: 0;
+  }
+  .ih-stat {
+    display: flex; align-items: center; gap: 7px;
+    font-size: 12px; color: #555;
+  }
+  .ih-stat strong { font-size: 15px; color: #111; font-weight: 700; }
+  .ih-stat-divider { width: 1px; height: 20px; background: #e8e8e8; }
+
+  .ih-body {
+    flex: 1; overflow-y: auto;
+    padding: 28px;
+    display: flex; flex-direction: column; gap: 20px;
+  }
+  .ih-body::-webkit-scrollbar { width: 4px; }
+  .ih-body::-webkit-scrollbar-thumb { background: #ccc; border-radius: 2px; }
+
+  .ih-section-title {
+    font-size: 11px; font-weight: 700; color: #888;
+    text-transform: uppercase; letter-spacing: 0.6px;
+    margin-bottom: 12px;
+  }
+
+  .ih-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+
+  .ih-card {
+    background: #fff;
+    border: 1px solid #e8e8e8;
+    border-radius: 10px;
+    padding: 18px 20px;
+  }
+  .ih-card-q {
+    font-size: 13px; font-weight: 600; color: #222;
+    margin-bottom: 14px; line-height: 1.4;
+  }
+  .ih-mini-chart {
+    display: flex; gap: 8px; align-items: flex-end;
+    height: 70px; margin-bottom: 10px;
+  }
+  .ih-mini-bar-wrap {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: flex-end; gap: 4px;
+  }
+  .ih-mini-bar {
+    width: 100%; border-radius: 3px 3px 0 0;
+  }
+  .ih-mini-label { font-size: 9px; color: #aaa; text-align: center; }
+  .ih-mini-pct { font-size: 10px; font-weight: 600; color: #555; }
+  .ih-card-footer {
+    display: flex; justify-content: space-between;
+    font-size: 10px; color: #aaa;
+    border-top: 1px solid #f0f0f0; padding-top: 10px; margin-top: 4px;
+  }
+
+  .ih-engagement {
+    background: #fff; border: 1px solid #e8e8e8;
+    border-radius: 10px; padding: 18px 20px;
+  }
+  .ih-eng-bars { display: flex; gap: 6px; align-items: flex-end; height: 60px; margin-top: 12px; }
+  .ih-eng-bar {
+    flex: 1; border-radius: 3px 3px 0 0;
+    background: #ddd; position: relative;
+  }
+  .ih-eng-bar.peak { background: #555; }
+  .ih-eng-labels { display: flex; gap: 6px; margin-top: 6px; }
+  .ih-eng-label { flex: 1; font-size: 9px; color: #bbb; text-align: center; }
+
+  .ih-participants-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px;
+  }
+  .ih-participant {
+    background: #fff; border: 1px solid #e8e8e8;
+    border-radius: 8px; padding: 12px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .ih-p-avatar {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: #ddd; display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700; color: #777; flex-shrink: 0;
+  }
+  .ih-p-name { font-size: 12px; font-weight: 600; color: #333; }
+  .ih-p-sub { font-size: 10px; color: #aaa; margin-top: 1px; }
+
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="topbar-left">
+    <button class="btn-icon" title="Back">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+    </button>
+    <div class="presentation-title">
+      <span style="font-size:14px;font-weight:600;color:#1a1a1a;">My presentation</span>
+      <span style="font-size:11px;color:#999;">My presentations</span>
+    </div>
+    <button class="btn-icon" title="Settings">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    </button>
+    <button class="btn-icon" title="Share">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+    </button>
+  </div>
+
+  <div class="topbar-right">
+    <div class="avatar">P</div>
+    <button class="btn-icon" title="Preview">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+    </button>
+    <button class="btn-start" id="btnPresent" onclick="startPresentation()">
+      Start presentation
+      <span class="divider"></span>
+      <span class="arrow">▼</span>
+    </button>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- LEFT PANEL -->
+  <div class="left-panel">
+    <button class="btn-new-slide" onclick="addSlide()">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      New slide
+    </button>
+    <div class="slides-list" id="slidesList"></div>
+  </div>
+
+  <!-- CENTER -->
+  <div class="center-area">
+    <div class="slide-canvas-wrap">
+      <div class="slide-canvas" id="slideCanvas" data-type="multiple">
+
+        <textarea class="slide-question-input" id="questionInput" placeholder="Ask your question here..." rows="2"
+          oninput="syncCurrentSlide()"></textarea>
+        <input class="slide-desc-input" id="descInput" placeholder="Description (optional)"
+          oninput="syncCurrentSlide()" />
+        <div class="options-area" id="optionsArea">
+          <div class="options-chart" id="optionsChart"></div>
+          <div class="chart-baseline"></div>
+          <div id="optionLabels" style="display:flex;gap:10px;"></div>
+          <button class="add-option-btn" onclick="addOption()">+ Add option</button>
+        </div>
+        <span class="slide-thumbsup">👍</span>
+
+        <!-- Participant panel (slide hover) -->
+        <div class="participant-panel" id="participantPanel"></div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- THUMB TOOLTIP -->
+<div class="thumb-tooltip" id="thumbTooltip"></div>
+
+<!-- BAR TOOLTIP -->
+<div class="bar-tooltip" id="barTooltip"></div>
+
+<!-- INSIGHTS MODAL -->
+<div class="modal-backdrop" id="insightsModal" onclick="if(event.target===this)closeInsights()">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-meta">
+        <span class="modal-live-dot"></span> Session ended &nbsp;·&nbsp; Mar 27, 2026
+      </div>
+      <div class="modal-title" id="modalTitle">Untitled presentation</div>
+      <div class="modal-stats">
+        <div class="modal-stat">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          63 responses
+        </div>
+        <div class="modal-stat">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          91% completion
+        </div>
+      </div>
+      <button class="modal-close" onclick="closeInsights()">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <div>
+        <div class="modal-section-label">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          Summary
+        </div>
+        <p class="modal-summary-text">Strong participation across both questions. The majority prefer starting their day with coffee (42%) and lean towards deep focus work blocks (55%). Responses were consistent and confident — no strong split or outliers.</p>
+      </div>
+
+      <div>
+        <div class="modal-section-label">Key findings</div>
+        <div class="modal-findings">
+          <div class="modal-finding">
+            <div class="finding-num">1</div>
+            <span>"Coffee first" was the top morning habit at 42% — a clear majority preference</span>
+          </div>
+          <div class="modal-finding">
+            <div class="finding-num">2</div>
+            <span>"Deep focus blocks" dominated work styles at 55%, suggesting your team values uninterrupted time</span>
+          </div>
+          <div class="modal-finding">
+            <div class="finding-num">3</div>
+            <span>Only 9% go straight to work — most people need a transition ritual before starting</span>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="modal-section-label">Suggested next steps</div>
+        <div class="modal-steps">
+          <div class="modal-step">
+            <div class="step-icon">📤</div>
+            <div class="step-text">
+              <strong>Share results with the team</strong>
+              <span>Send a summary to all participants</span>
+            </div>
+            <span class="step-arrow">→</span>
+          </div>
+          <div class="modal-step">
+            <div class="step-icon">💬</div>
+            <div class="step-text">
+              <strong>Create a follow-up pulse</strong>
+              <span>Check in on team habits next week</span>
+            </div>
+            <span class="step-arrow">→</span>
+          </div>
+        </div>
+      </div>
+
+      <button class="modal-cta" onclick="openInsightsHome()">
+        View full results &amp; insights
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- INSIGHTS HOME -->
+<div class="ih-backdrop" id="insightsHome" onclick="if(event.target===this)closeInsightsHome()">
+  <div class="ih-modal">
+
+    <div class="ih-topbar">
+      <div class="ih-topbar-left">
+        <div>
+          <div class="ih-eyebrow">Insights home</div>
+          <div class="file-dropdown" id="fileDropdown">
+            <button class="fd-trigger" onclick="toggleFileDropdown()">
+              <div class="ih-title" id="ihTitle" style="margin:0;">—</div>
+              <svg class="fd-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="fd-menu" id="fdMenu">
+              <div class="fd-menu-header">Recent presentations</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <button class="ih-close" onclick="closeInsightsHome()">✕</button>
+    </div>
+
+    <div class="ih-statsbar" id="ihStats"></div>
+
+    <div class="ih-body">
+
+      <!-- Per-slide results -->
+      <div>
+        <div class="ih-section-title">Results by slide</div>
+        <div class="ih-cards" id="ihCards"></div>
+      </div>
+
+      <!-- Engagement over time -->
+      <div class="ih-engagement">
+        <div class="ih-section-title">Response activity</div>
+        <div style="font-size:11px;color:#aaa;margin-top:-8px;margin-bottom:4px;">Responses received per minute during session</div>
+        <div class="ih-eng-bars" id="ihActivity"></div>
+        <div class="ih-eng-labels">
+          <div class="ih-eng-label">0:00</div><div class="ih-eng-label">0:30</div>
+          <div class="ih-eng-label">1:00</div><div class="ih-eng-label">1:30</div>
+          <div class="ih-eng-label">2:00</div><div class="ih-eng-label">2:30</div>
+          <div class="ih-eng-label">3:00</div><div class="ih-eng-label">3:30</div>
+          <div class="ih-eng-label">4:00</div><div class="ih-eng-label">4:30</div>
+          <div class="ih-eng-label">5:00</div><div class="ih-eng-label">5:30</div>
+        </div>
+      </div>
+
+      <!-- Participants -->
+      <div>
+        <div class="ih-section-title" id="ihParticipantsTitle">Participants</div>
+        <div class="ih-participants-grid" id="ihParticipants"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- PRESENTATION OVERLAY -->
+<div id="presentOverlay" style="display:none;position:fixed;inset:0;background:#1a1a1a;z-index:1000;display:none;align-items:center;justify-content:center;">
+  <div id="presentSlide" style="aspect-ratio:16/9;height:100%;width:auto;background:#fff;border-radius:0;display:flex;flex-direction:column;padding:5% 6%;position:relative;overflow:hidden;"></div>
+  <button onclick="stopPresentation()" style="position:fixed;top:20px;right:24px;background:#333;color:#fff;border:none;border-radius:6px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;z-index:1001;transition:background 0.15s;"
+    onmouseover="this.style.background='#111'" onmouseout="this.style.background='#333'">
+    Stop presenting
+  </button>
+</div>
+
+<script>
+// ── FILES ─────────────────────────────────────────
+const FILES = [
+  {
+    name: 'Team Kickoff Q1',
+    date: 'Mar 15, 2026',
+    responses: 87, completion: 94, avgTime: '9s', slideCount: 3,
+    activity: [20,45,85,100,92,70,55,65,80,38,20,10],
+    slides: [
+      { q: 'How would you rate last quarter?',
+        options: [{l:'Excellent',pct:38},{l:'Good',pct:41},{l:'Fair',pct:14},{l:'Poor',pct:7}],
+        responses:84, avgTime:'8s', participation:97 },
+      { q: 'What should be our Q1 priority?',
+        options: [{l:'Growth',pct:52},{l:'Product',pct:31},{l:'Culture',pct:17}],
+        responses:79, avgTime:'11s', participation:91 },
+      { q: 'Team morale check-in',
+        options: [{l:'Energized',pct:45},{l:'Steady',pct:38},{l:'Burned out',pct:17}],
+        responses:81, avgTime:'7s', participation:93 },
+    ],
+    participants: [
+      {i:'AM',n:'Alex M.',s:'3 of 3'},{i:'SK',n:'Sara K.',s:'3 of 3'},
+      {i:'TB',n:'Tom B.',s:'2 of 3'},{i:'PL',n:'Priya L.',s:'3 of 3'},
+      {i:'JR',n:'James R.',s:'3 of 3'},{i:'NW',n:'Nina W.',s:'3 of 3'},
+      {i:'OD',n:'Oliver D.',s:'1 of 3'},{i:'MH',n:'Maya H.',s:'3 of 3'},
+    ], extra: 79,
+  },
+  {
+    name: 'Product Feedback Survey',
+    date: 'Mar 10, 2026',
+    responses: 142, completion: 88, avgTime: '14s', slideCount: 4,
+    activity: [40,70,95,100,88,75,60,80,90,55,30,18],
+    slides: [
+      { q: 'How satisfied are you with the product?',
+        options: [{l:'Very satisfied',pct:44},{l:'Satisfied',pct:33},{l:'Neutral',pct:15},{l:'Dissatisfied',pct:8}],
+        responses:138, avgTime:'10s', participation:97 },
+      { q: 'Which feature do you use most?',
+        options: [{l:'Dashboard',pct:39},{l:'Reports',pct:28},{l:'Integrations',pct:21},{l:'API',pct:12}],
+        responses:125, avgTime:'17s', participation:88 },
+      { q: 'Would you recommend us?',
+        options: [{l:'Definitely',pct:58},{l:'Probably',pct:27},{l:'Not sure',pct:15}],
+        responses:131, avgTime:'9s', participation:92 },
+      { q: 'What is your biggest pain point?',
+        options: [{l:'Onboarding',pct:35},{l:'Performance',pct:29},{l:'Pricing',pct:24},{l:'Support',pct:12}],
+        responses:119, avgTime:'19s', participation:84 },
+    ],
+    participants: [
+      {i:'RG',n:'Ryan G.',s:'4 of 4'},{i:'ZH',n:'Zoe H.',s:'4 of 4'},
+      {i:'FK',n:'Finn K.',s:'3 of 4'},{i:'IM',n:'Isla M.',s:'4 of 4'},
+      {i:'NC',n:'Noah C.',s:'4 of 4'},{i:'LR',n:'Lily R.',s:'2 of 4'},
+      {i:'JB',n:'Jack B.',s:'4 of 4'},{i:'AL',n:'Ava L.',s:'4 of 4'},
+    ], extra: 134,
+  },
+  {
+    name: 'All Hands — March',
+    date: 'Mar 5, 2026',
+    responses: 201, completion: 79, avgTime: '11s', slideCount: 5,
+    activity: [60,90,100,95,80,70,85,92,75,50,35,22],
+    slides: [
+      { q: 'Are you excited about the company direction?',
+        options: [{l:'Very excited',pct:51},{l:'Optimistic',pct:31},{l:'Uncertain',pct:12},{l:'Concerned',pct:6}],
+        responses:196, avgTime:'8s', participation:98 },
+      { q: 'How clear is your role right now?',
+        options: [{l:'Very clear',pct:42},{l:'Mostly clear',pct:35},{l:'Somewhat unclear',pct:16},{l:'Unclear',pct:7}],
+        responses:178, avgTime:'12s', participation:89 },
+      { q: 'Best thing about working here?',
+        options: [{l:'People',pct:48},{l:'Mission',pct:27},{l:'Growth',pct:18},{l:'Flexibility',pct:7}],
+        responses:183, avgTime:'10s', participation:91 },
+    ],
+    participants: [
+      {i:'SO',n:'Sam O.',s:'5 of 5'},{i:'MJ',n:'Mia J.',s:'5 of 5'},
+      {i:'EV',n:'Ethan V.',s:'4 of 5'},{i:'CN',n:'Chloe N.',s:'5 of 5'},
+      {i:'LA',n:'Lucas A.',s:'5 of 5'},{i:'GE',n:'Grace E.',s:'3 of 5'},
+      {i:'HW',n:'Henry W.',s:'5 of 5'},{i:'ED',n:'Ella D.',s:'5 of 5'},
+    ], extra: 193,
+  },
+  {
+    name: 'Onboarding Day 1',
+    date: 'Feb 28, 2026',
+    responses: 31, completion: 97, avgTime: '7s', slideCount: 2,
+    activity: [15,35,65,90,100,88,72,55,40,25,12,5],
+    slides: [
+      { q: 'How was your first morning?',
+        options: [{l:'Smooth',pct:61},{l:'A bit overwhelming',pct:29},{l:'Confusing',pct:10}],
+        responses:30, avgTime:'6s', participation:97 },
+      { q: 'What would help most this week?',
+        options: [{l:'More 1:1s',pct:48},{l:'Documentation',pct:32},{l:'Shadowing',pct:20}],
+        responses:29, avgTime:'8s', participation:94 },
+    ],
+    participants: [
+      {i:'BN',n:'Ben N.',s:'2 of 2'},{i:'NK',n:'Nora K.',s:'2 of 2'},
+      {i:'WP',n:'Will P.',s:'2 of 2'},{i:'AS',n:'Aria S.',s:'1 of 2'},
+      {i:'TM',n:'Theo M.',s:'2 of 2'},{i:'RL',n:'Ruby L.',s:'2 of 2'},
+      {i:'FH',n:'Finn H.',s:'2 of 2'},{i:'JV',n:'Jade V.',s:'2 of 2'},
+    ], extra: 23,
+  },
+];
+
+let currentFileIndex = 0;
+
+function selectFile(index) {
+  currentFileIndex = index;
+  document.getElementById('ihTitle').textContent = FILES[index].name;
+  renderFileDropdownItems();
+  toggleFileDropdown(false);
+  if (document.getElementById('insightsHome').classList.contains('open')) {
+    renderInsightsHomeContent(FILES[index]);
+  }
+}
+
+function toggleFileDropdown(force) {
+  const dd = document.getElementById('fileDropdown');
+  const open = force !== undefined ? force : !dd.classList.contains('open');
+  dd.classList.toggle('open', open);
+}
+
+function renderFileDropdownItems() {
+  const menu = document.getElementById('fdMenu');
+  menu.innerHTML = `<div class="fd-menu-header">Recent presentations</div>`;
+  FILES.forEach((f, i) => {
+    const item = document.createElement('div');
+    item.className = 'fd-item' + (i === currentFileIndex ? ' active' : '');
+    item.innerHTML = `
+      <div class="fd-item-left">
+        <div class="fd-item-name">${f.name}</div>
+        <div class="fd-item-meta">${f.date} · ${f.responses} responses</div>
+      </div>
+      ${i === currentFileIndex ? '<span class="fd-item-check">✓</span>' : ''}
+    `;
+    item.onclick = () => selectFile(i);
+    menu.appendChild(item);
+  });
+}
+
+document.addEventListener('click', e => {
+  if (!document.getElementById('fileDropdown').contains(e.target)) {
+    toggleFileDropdown(false);
+  }
+});
+
+// ── DATA ──────────────────────────────────────────
+let slides = [];
+let currentSlideIndex = 0;
+
+const GRAY_SHADES = ['#333','#666','#999','#444','#777','#aaa'];
+
+// Fake participant pools per option index
+const OPTION_PEOPLE = [
+  ['Alex M.','Sara K.','Tom B.','Priya L.','James R.','Nina W.','Oliver D.','Maya H.','Leo S.','Emma T.'],
+  ['Chris P.','Dana F.','Ryan G.','Zoe H.','Finn K.','Isla M.','Noah C.','Lily R.','Jack B.','Ava L.'],
+  ['Sam O.','Mia J.','Ethan V.','Chloe N.','Lucas A.','Grace E.','Henry W.','Ella D.','Lucas F.','Rose T.'],
+  ['Ben C.','Nora K.','Will P.','Aria S.','Theo M.','Ruby L.','Finn H.','Jade B.','Cole R.','Luna V.'],
+  ['Owen J.','Sophie T.','Liam D.','Zara F.','Kyle M.','Piper S.','Adam G.','Freya L.','Ian C.','Vera H.'],
+  ['Drew N.','Tara B.','Miles K.','Skye P.','Reid O.','Nadia W.','Blake F.','Cora J.','Seth M.','Wren A.'],
+];
+
+const AVG_TIMES = [8, 14, 11, 9, 13, 10];
+
+// Per-slide fake participant data
+const SLIDE_STATS = [
+  { count: 63, completion: 91, avgTime: '7s',  avatars: ['AM','SK','TB','PL','JR'], extra: 58 },
+  { count: 47, completion: 83, avgTime: '12s', avatars: ['NW','OD','MH','LS','ET'], extra: 42 },
+  { count: 55, completion: 96, avgTime: '9s',  avatars: ['CP','DF','RG','ZH','FK'], extra: 50 },
+  { count: 38, completion: 74, avgTime: '15s', avatars: ['IM','NC','LR','JB','AL'], extra: 33 },
+  { count: 71, completion: 88, avgTime: '11s', avatars: ['SO','MJ','EV','CN','LA'], extra: 66 },
+];
+
+function renderParticipantPanel(slideIndex) {
+  const panel = document.getElementById('participantPanel');
+  if (!panel) return;
+  const d = SLIDE_STATS[slideIndex % SLIDE_STATS.length];
+  const avatarHTML = d.avatars.map(a => `<div class="pp-avatar">${a}</div>`).join('');
+  panel.innerHTML = `
+    <div class="pp-stat">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      ${d.count} participants
+    </div>
+    <div class="pp-avatars">
+      ${avatarHTML}
+      <div class="pp-more">+${d.extra}</div>
+    </div>
+    <div class="pp-divider"></div>
+    <div class="pp-row"><span>Completion rate</span><span>${d.completion}%</span></div>
+    <div class="pp-row"><span>Avg. response time</span><span>${d.avgTime}</span></div>
+    <div class="pp-row"><span>Responded to slide</span><span>${d.count} of ${d.count + Math.floor(d.count * (1 - d.completion/100))}</span></div>
+  `;
+}
+
+function showBarTooltip(e, optIndex, opt, totalVotes, rank, totalOptions) {
+  const tooltip = document.getElementById('barTooltip');
+  const pct = Math.round((opt.votes / totalVotes) * 100);
+  const people = OPTION_PEOPLE[optIndex % OPTION_PEOPLE.length].slice(0, 4);
+  const rankLabel = rank === 1 ? '🥇 Most popular' : rank === 2 ? '🥈 2nd place' : `#${rank} of ${totalOptions}`;
+  const initials = name => name.split(' ').map(p => p[0]).join('');
+
+  tooltip.innerHTML = `
+    <div class="bt-header">
+      <div class="bt-dot" style="background:${GRAY_SHADES[optIndex % GRAY_SHADES.length]}"></div>
+      <div class="bt-name">${opt.label}</div>
+    </div>
+    <div class="bt-big">${pct}%</div>
+    <div class="bt-sub">${opt.votes} votes · avg ${AVG_TIMES[optIndex % AVG_TIMES.length]}s to answer</div>
+    <span class="bt-rank" style="filter:grayscale(1)">${rankLabel}</span>
+    <div class="bt-divider"></div>
+    <div class="bt-label">Who picked this</div>
+    <div class="bt-people">
+      ${people.map(name => `
+        <div class="bt-person">
+          <div class="bt-person-dot">${initials(name)}</div>
+          ${name}
+        </div>`).join('')}
+      ${opt.votes > 4 ? `<div style="font-size:10px;color:#bbb;margin-top:2px;">+${opt.votes - 4} more</div>` : ''}
+    </div>
+  `;
+  tooltip.style.display = 'block';
+  positionTooltip(e);
+}
+
+function positionTooltip(e) {
+  const t = document.getElementById('barTooltip');
+  const margin = 14;
+  let x = e.clientX + margin;
+  let y = e.clientY - 20;
+  if (x + 210 > window.innerWidth) x = e.clientX - 210 - margin;
+  if (y + t.offsetHeight > window.innerHeight) y = window.innerHeight - t.offsetHeight - 8;
+  t.style.left = x + 'px';
+  t.style.top = y + 'px';
+}
+
+function hideBarTooltip() {
+  document.getElementById('barTooltip').style.display = 'none';
+}
+
+document.addEventListener('mousemove', e => {
+  if (document.getElementById('barTooltip').style.display === 'block') positionTooltip(e);
+});
+
+function makeSlide(type = 'multiple', question = '', desc = '', options = null) {
+  return {
+    id: Date.now() + Math.random(),
+    type, question, desc,
+    options: options || (type === 'multiple' ? [
+      { label: 'Option 1', votes: 0 },
+      { label: 'Option 2', votes: 0 },
+      { label: 'Option 3', votes: 0 },
+    ] : [])
+  };
+}
+
+// ── INIT ──────────────────────────────────────────
+function init() {
+  slides.push(makeSlide('title', 'Welcome to the team survey', 'Share your honest thoughts'));
+  slides.push(makeSlide('multiple', 'How do you usually start your mornings?', '', [
+    { label: 'Coffee first', votes: 42 },
+    { label: 'Check phone', votes: 31 },
+    { label: 'Exercise', votes: 18 },
+    { label: 'Straight to work', votes: 9 },
+  ]));
+  slides.push(makeSlide('multiple', 'Which work style fits you best?', '', [
+    { label: 'Deep focus blocks', votes: 55 },
+    { label: 'Short sprints', votes: 27 },
+    { label: 'Go with the flow', votes: 18 },
+  ]));
+  selectSlide(1);
+  renderSlidesList();
+}
+
+// ── SLIDES LIST ───────────────────────────────────
+function renderSlidesList() {
+  const list = document.getElementById('slidesList');
+  list.innerHTML = '';
+  slides.forEach((slide, i) => {
+    const wrap = document.createElement('div');
+    wrap.className = 'slide-thumb-wrap';
+    wrap.innerHTML = `
+      <div class="slide-num">${i + 1}</div>
+      <div class="slide-thumb${i === currentSlideIndex ? ' selected' : ''}" onclick="selectSlide(${i})">
+        ${thumbHTML(slide)}
+      </div>
+    `;
+    const thumb = wrap.querySelector('.slide-thumb');
+    if (slide.type !== 'title' && slide.options.length > 0) {
+      const d = SLIDE_STATS[i % SLIDE_STATS.length];
+      const total = d.count + Math.floor(d.count * (1 - d.completion / 100));
+      thumb.addEventListener('mouseenter', e => {
+        const t = document.getElementById('thumbTooltip');
+        t.innerHTML = `<strong>${d.count} participants</strong>${d.completion}% participation rate`;
+        t.style.display = 'block';
+        const r = thumb.getBoundingClientRect();
+        t.style.left = (r.right + 8) + 'px';
+        t.style.top = (r.top + r.height / 2 - t.offsetHeight / 2) + 'px';
+      });
+      thumb.addEventListener('mouseleave', () => {
+        document.getElementById('thumbTooltip').style.display = 'none';
+      });
+    }
+    thumb.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      if (slides.length > 1) {
+        slides.splice(i, 1);
+        if (currentSlideIndex >= slides.length) currentSlideIndex = slides.length - 1;
+        renderSlidesList();
+        renderCurrentSlide();
+      }
+    });
+    list.appendChild(wrap);
+  });
+}
+
+function thumbHTML(slide) {
+  if (slide.type === 'title') {
+    return `<div class="thumb-content"><div class="thumb-icon" style="font-size:16px;color:#888;font-weight:700;">T</div></div>`;
+  }
+  const bars = slide.options.slice(0, 4).map((o, i) =>
+    `<div class="thumb-bar" style="height:${6 + i * 2}px;background:${GRAY_SHADES[i % GRAY_SHADES.length]}"></div>`
+  ).join('');
+  const q = slide.question ? `<div class="thumb-question">${slide.question.substring(0, 40)}</div>` : '';
+  return `<div class="thumb-content">${q}<div class="thumb-bars">${bars}</div></div>`;
+}
+
+// ── SELECT & RENDER ───────────────────────────────
+function selectSlide(index) {
+  currentSlideIndex = index;
+  renderCurrentSlide();
+  renderSlidesList();
+}
+
+function renderCurrentSlide() {
+  const index = currentSlideIndex;
+  const slide = slides[index];
+  if (!slide) return;
+  const canvas = document.getElementById('slideCanvas');
+  canvas.dataset.type = slide.type;
+  document.getElementById('questionInput').value = slide.question;
+  document.getElementById('descInput').value = slide.desc;
+  renderOptions(slide.options);
+  renderParticipantPanel(index);
+}
+
+function renderOptions(options) {
+  const chart = document.getElementById('optionsChart');
+  const labelsRow = document.getElementById('optionLabels');
+  chart.innerHTML = '';
+  labelsRow.innerHTML = '';
+  const maxVotes = Math.max(...options.map(o => o.votes), 1);
+  const totalVotes = options.reduce((s, o) => s + o.votes, 0) || 1;
+  const sorted = [...options].sort((a, b) => b.votes - a.votes);
+  options.forEach((opt, i) => {
+    const pct = Math.round((opt.votes / maxVotes) * 100);
+    const rank = sorted.indexOf(opt) + 1;
+    // Bar column (count + bar)
+    const col = document.createElement('div');
+    col.className = 'option-col';
+    col.style.cursor = 'default';
+    col.innerHTML = `
+      <div class="option-count">${opt.votes}</div>
+      <div class="option-bar" style="height:${pct}%;width:100%;"></div>
+      <button class="option-remove" onclick="removeOption(${i})">✕</button>
+    `;
+    col.addEventListener('mouseenter', e => showBarTooltip(e, i, opt, totalVotes, rank, options.length));
+    col.addEventListener('mouseleave', hideBarTooltip);
+    chart.appendChild(col);
+    // Label below baseline
+    const lbl = document.createElement('div');
+    lbl.style.cssText = 'flex:1;min-width:0;';
+    lbl.innerHTML = `<input class="option-label-input" type="text" value="${opt.label}" placeholder="Option ${i+1}"
+      oninput="updateOptionLabel(${i}, this.value)" />`;
+    labelsRow.appendChild(lbl);
+  });
+}
+
+function syncCurrentSlide() {
+  const slide = slides[currentSlideIndex];
+  if (!slide) return;
+  slide.question = document.getElementById('questionInput').value;
+  slide.desc = document.getElementById('descInput').value;
+  renderSlidesList();
+}
+
+// ── OPTIONS ───────────────────────────────────────
+function addOption() {
+  const slide = slides[currentSlideIndex];
+  slide.options.push({ label: `Option ${slide.options.length + 1}`, votes: 0 });
+  renderOptions(slide.options);
+  renderSlidesList();
+}
+
+function removeOption(index) {
+  const slide = slides[currentSlideIndex];
+  if (slide.options.length <= 1) return;
+  slide.options.splice(index, 1);
+  renderOptions(slide.options);
+  renderSlidesList();
+}
+
+function updateOptionLabel(index, value) {
+  slides[currentSlideIndex].options[index].label = value;
+}
+
+// ── ADD SLIDE ─────────────────────────────────────
+function addSlide() {
+  slides.push(makeSlide('multiple'));
+  selectSlide(slides.length - 1);
+}
+
+// ── PRESENTATION MODE ─────────────────────────────
+function startPresentation() {
+  const slide = slides[currentSlideIndex];
+  const overlay = document.getElementById('presentOverlay');
+  const presentSlide = document.getElementById('presentSlide');
+
+  // Mirror the current slide's type
+  presentSlide.dataset.type = slide.type;
+
+  // Build slide content
+  const maxVotes = Math.max(...slide.options.map(o => o.votes), 1);
+  const barsHTML = slide.options.map((opt, i) => {
+    const pct = Math.round((opt.votes / maxVotes) * 100);
+    const shades = ['#333','#666','#999','#444','#777','#aaa'];
+    return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;height:100%;justify-content:flex-end;">
+      <div style="font-size:clamp(12px,1.8vw,20px);font-weight:500;color:#555;margin-bottom:4px;">${opt.votes}</div>
+      <div style="width:100%;height:${pct}%;background:${shades[i % shades.length]};border-radius:5px 5px 0 0;"></div>
+    </div>`;
+  }).join('');
+
+  const labelsHTML = slide.options.map(opt =>
+    `<div style="flex:1;text-align:center;font-size:clamp(10px,1.2vw,14px);color:#777;padding-top:6px;">${opt.label}</div>`
+  ).join('');
+
+  const optionsHTML = slide.type === 'multiple' ? `
+    <div style="margin-top:auto;padding-top:16px;display:flex;flex-direction:column;">
+      <div style="display:flex;gap:10px;align-items:flex-end;height:clamp(80px,20vh,200px);">${barsHTML}</div>
+      <div style="width:100%;height:1px;background:#ddd;margin:2px 0;"></div>
+      <div style="display:flex;gap:10px;">${labelsHTML}</div>
+    </div>` : '';
+
+  presentSlide.innerHTML = `
+    <div style="font-size:clamp(20px,4vw,52px);font-weight:400;color:#222;line-height:1.25;flex-shrink:0;">${slide.question || ''}</div>
+    ${slide.desc ? `<div style="font-size:clamp(13px,1.8vw,22px);color:#888;margin-top:10px;flex-shrink:0;">${slide.desc}</div>` : ''}
+    ${optionsHTML}
+  `;
+
+  overlay.style.display = 'flex';
+  document.documentElement.requestFullscreen?.();
+}
+
+function stopPresentation() {
+  document.getElementById('presentOverlay').style.display = 'none';
+  if (document.fullscreenElement) document.exitFullscreen?.();
+  setTimeout(() => {
+    document.getElementById('modalTitle').textContent = FILES[currentFileIndex].name;
+    document.getElementById('insightsModal').classList.add('open');
+  }, 2000);
+}
+
+function closeInsights() {
+  document.getElementById('insightsModal').classList.remove('open');
+}
+
+function openInsightsHome() {
+  closeInsights();
+  const file = FILES[currentFileIndex];
+  renderInsightsHomeContent(file);
+  document.getElementById('insightsHome').classList.add('open');
+}
+
+function closeInsightsHome() {
+  document.getElementById('insightsHome').classList.remove('open');
+}
+
+function renderInsightsHomeContent(file) {
+  document.getElementById('ihTitle').textContent = file.name;
+  // Stats bar
+  document.getElementById('ihStats').innerHTML = `
+    <div class="ih-stat"><strong>${file.responses}</strong> responses</div>
+    <div class="ih-stat-divider"></div>
+    <div class="ih-stat"><strong>${file.completion}%</strong> completion</div>
+    <div class="ih-stat-divider"></div>
+    <div class="ih-stat"><strong>${file.slideCount}</strong> slides answered</div>
+    <div class="ih-stat-divider"></div>
+    <div class="ih-stat"><strong>${file.avgTime}</strong> avg. response time</div>
+    <div class="ih-stat-divider"></div>
+    <div class="ih-stat"><strong>${file.date}</strong></div>
+  `;
+  // Slide cards
+  const shades = ['#333','#666','#999','#bbb'];
+  const cardsHTML = file.slides.map(s => {
+    const maxPct = Math.max(...s.options.map(o => o.pct));
+    const barsHTML = s.options.map((o, i) => `
+      <div class="ih-mini-bar-wrap">
+        <div class="ih-mini-pct">${o.pct}%</div>
+        <div class="ih-mini-bar" style="height:${Math.round(o.pct/maxPct*100)}%;background:${shades[i % shades.length]};"></div>
+        <div class="ih-mini-label">${o.l}</div>
+      </div>`).join('');
+    return `<div class="ih-card">
+      <div class="ih-card-q">${s.q}</div>
+      <div class="ih-mini-chart">${barsHTML}</div>
+      <div class="ih-card-footer">
+        <span>${s.responses} responses</span>
+        <span>Avg. ${s.avgTime}</span>
+        <span>${s.participation}% participated</span>
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('ihCards').innerHTML = cardsHTML;
+  // Activity chart
+  const maxA = Math.max(...file.activity);
+  const actBars = file.activity.map((v, i) =>
+    `<div class="ih-eng-bar${v === maxA ? ' peak' : ''}" style="height:${Math.round(v/maxA*100)}%;"></div>`
+  ).join('');
+  document.getElementById('ihActivity').innerHTML = actBars;
+  // Participants
+  const pHTML = file.participants.map(p =>
+    `<div class="ih-participant">
+      <div class="ih-p-avatar">${p.i}</div>
+      <div><div class="ih-p-name">${p.n}</div><div class="ih-p-sub">${p.s} slides</div></div>
+    </div>`
+  ).join('') + `<div class="ih-participant" style="background:#f7f7f7;border-style:dashed;justify-content:center;">
+    <div style="font-size:11px;color:#bbb;text-align:center;">+${file.extra} more</div>
+  </div>`;
+  document.getElementById('ihParticipants').innerHTML = pHTML;
+  document.getElementById('ihParticipantsTitle').textContent = `Participants (${file.responses})`;
+}
+
+document.addEventListener('fullscreenchange', () => {
+  if (!document.fullscreenElement) {
+    document.getElementById('presentOverlay').style.display = 'none';
+  }
+});
+
+selectFile(0);
+renderFileDropdownItems();
+init();
+</script>
+</body>
+</html>
