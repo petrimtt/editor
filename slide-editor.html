@@ -293,6 +293,24 @@
   .option-col:nth-child(5) .option-bar { background: #777; }
   .option-col:nth-child(6) .option-bar { background: #aaa; }
 
+  /* Survey mode */
+  .survey-mode .slide-thumb { aspect-ratio: 16 / 4.5; }
+  .survey-option-row { display: flex; align-items: center; gap: 12px; padding: 3px 0; }
+  .survey-label { width: 110px; flex-shrink: 0; text-align: right; font-size: 12px; color: #555; font-family: inherit; border: none; background: none; outline: none; padding: 0; }
+  .survey-label::placeholder { color: #bbb; }
+  .survey-bar-wrap { flex: 1; height: 78px; background: #f0f0f0; border-radius: 5px; overflow: hidden; cursor: default; }
+  .survey-bar { height: 100%; border-radius: 5px; transition: width 0.3s, filter 0.15s; }
+  .survey-option-row:hover .survey-bar { filter: brightness(0.9); }
+  .survey-count { font-size: 12px; font-weight: 600; color: #666; width: 28px; text-align: right; flex-shrink: 0; }
+  .survey-remove-btn { background: none; border: none; cursor: pointer; color: #ccc; font-size: 13px; padding: 0 4px; opacity: 0; flex-shrink: 0; transition: opacity 0.15s; line-height: 1; }
+  .survey-option-row:hover .survey-remove-btn { opacity: 1; }
+  #optionsChart.survey-chart { flex-direction: column; align-items: stretch; justify-content: flex-start; gap: 0; height: auto; }
+  #optionLabels.survey-labels { display: none; }
+  .survey-mode .chart-baseline { display: none; }
+  .survey-mode .slide-canvas { justify-content: center; }
+  .survey-mode .options-area { margin-top: 16px; padding-top: 0; }
+  .thumb-question-only { width: 100%; font-size: 12px; color: #666; text-align: center; line-height: 1.3; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; padding: 0 4px; }
+
   .option-label-input {
     border: none; outline: none;
     font-size: clamp(10px, 1.2vw, 13px);
@@ -643,16 +661,19 @@
 
   /* ── INSIGHTS PANEL ───────────────────────── */
   .insights-panel {
-    width: 0;
-    overflow: hidden;
+    position: fixed;
+    top: 0; right: 0; bottom: 0;
+    width: 430px;
     background: #fff;
     border-left: 1px solid #e0e0e0;
-    flex-shrink: 0;
-    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: -4px 0 24px rgba(0,0,0,0.07);
+    transform: translateX(100%);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     display: flex;
     flex-direction: column;
+    z-index: 500;
   }
-  .insights-panel.open { width: 430px; }
+  .insights-panel.open { transform: translateX(0); }
 
   .right-toolbar { transition: opacity 0.2s, width 0.3s cubic-bezier(0.4, 0, 0.2, 1); overflow: hidden; }
   .right-toolbar.panel-open { opacity: 0; pointer-events: none; width: 0; }
@@ -850,6 +871,25 @@
   }
   .modal-cta:hover { background: #111; }
 
+  /* Q&A */
+  .qna-sort-select {
+    border: 1px solid #e0e0e0; border-radius: 6px;
+    background: #fff; font-size: 11px; color: #555;
+    padding: 3px 6px; cursor: pointer; outline: none;
+    font-family: inherit;
+  }
+  .qna-item {
+    padding: 11px 12px;
+    border-radius: 8px;
+    transition: background 0.12s;
+  }
+  .qna-item:hover { background: #f7f7f7; }
+  .qna-question { font-size: 13px; color: #1a1a1a; line-height: 1.45; margin-bottom: 6px; }
+  .qna-meta { display: flex; align-items: center; gap: 10px; }
+  .qna-upvotes { display: flex; align-items: center; gap: 3px; font-size: 11px; font-weight: 600; color: #555; }
+  .qna-time { font-size: 11px; color: #aaa; }
+  .qna-badge { font-size: 10px; font-weight: 600; color: #555; background: #f0f0f0; border-radius: 20px; padding: 2px 8px; margin-left: auto; }
+
   /* ── INSIGHTS HOME ───────────────────────────── */
   .ih-backdrop {
     display: none; position: fixed; inset: 0;
@@ -974,18 +1014,234 @@
   .ih-p-name { font-size: 12px; font-weight: 600; color: #333; }
   .ih-p-sub { font-size: 10px; color: #aaa; margin-top: 1px; }
 
+  /* ── HOME VIEW ───────────────────────────────── */
+  .home-view {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+  .editor-view {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  .hv-sidebar {
+    width: 216px; flex-shrink: 0;
+    background: #fff; border-right: 1px solid #e0e0e0;
+    display: flex; flex-direction: column;
+    overflow-y: auto;
+  }
+  .hv-org {
+    display: flex; align-items: center; gap: 10px;
+    padding: 18px 16px 10px;
+  }
+  .hv-org-avatar {
+    width: 28px; height: 28px; border-radius: 6px;
+    background: #333; color: #fff;
+    font-size: 12px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .hv-org-name { font-size: 13px; font-weight: 600; color: #111; }
+  .hv-nav { padding: 6px 10px; display: flex; flex-direction: column; gap: 1px; }
+  .hv-nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 10px; border-radius: 7px;
+    font-size: 13px; color: #555;
+    cursor: pointer; border: none; background: none;
+    font-family: inherit; text-align: left; width: 100%;
+    transition: background 0.12s, color 0.12s;
+  }
+  .hv-nav-item:hover { background: #f5f5f5; color: #111; }
+  .hv-nav-item.active { background: #f0f0f0; color: #111; font-weight: 600; }
+  .hv-nav-item svg { flex-shrink: 0; color: #999; }
+  .hv-nav-item.active svg, .hv-nav-item:hover svg { color: #444; }
+  .hv-nav-divider { height: 1px; background: #f0f0f0; margin: 8px 16px; }
+  .hv-section-header {
+    padding: 6px 20px 2px;
+    font-size: 10px; font-weight: 700; color: #ccc;
+    text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .hv-sidebar-footer {
+    margin-top: auto; border-top: 1px solid #f0f0f0;
+    padding: 14px 16px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .hv-user-avatar {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: #999; color: #fff;
+    font-size: 11px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .hv-user-name { font-size: 12px; font-weight: 600; color: #333; }
+
+  .hv-main {
+    flex: 1; overflow-y: auto;
+    padding: 44px 52px;
+    background: #fff;
+  }
+  .hv-main::-webkit-scrollbar { width: 4px; }
+  .hv-main::-webkit-scrollbar-thumb { background: #ccc; border-radius: 2px; }
+  .hv-greeting { font-size: 24px; font-weight: 700; color: #111; margin-bottom: 4px; }
+  .hv-sub { font-size: 13px; color: #bbb; margin-bottom: 30px; }
+
+  .hv-filter-tabs { display: flex; gap: 6px; margin-bottom: 32px; }
+  .hv-filter-tab {
+    padding: 6px 16px; border-radius: 20px;
+    font-size: 12px; font-weight: 600;
+    border: 1px solid #ddd; background: #fff; color: #888;
+    cursor: pointer; font-family: inherit;
+    transition: all 0.12s;
+  }
+  .hv-filter-tab:hover { border-color: #bbb; color: #333; }
+  .hv-filter-tab.active { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
+
+  .hv-section { margin-bottom: 40px; }
+  .hv-section-title {
+    font-size: 11px; font-weight: 700; color: #aaa;
+    text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 16px;
+  }
+  .hv-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 16px;
+  }
+  .hv-card {
+    background: #fff; border: 1px solid #e4e4e4;
+    border-radius: 10px; overflow: hidden; cursor: pointer;
+    transition: box-shadow 0.15s, border-color 0.15s, transform 0.12s;
+  }
+  .hv-card:hover { box-shadow: 0 4px 18px rgba(0,0,0,0.09); border-color: #ccc; transform: translateY(-1px); }
+  .hv-card-thumb {
+    aspect-ratio: 16/9; background: #ebebeb;
+    position: relative; overflow: hidden;
+  }
+  .hv-thumb-chart {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    display: flex; align-items: flex-end; gap: 5px;
+    padding: 0 14px; height: 58%;
+  }
+  .hv-thumb-bar { flex: 1; border-radius: 3px 3px 0 0; }
+  .hv-response-pill {
+    position: absolute; top: 8px; right: 8px;
+    background: rgba(0,0,0,0.65); color: #fff;
+    font-size: 10px; font-weight: 600;
+    padding: 3px 8px; border-radius: 20px;
+    white-space: nowrap; cursor: pointer;
+    transition: background 0.15s;
+  }
+  .hv-response-pill:hover { background: rgba(0,0,0,0.85); }
+  .hv-draft-pill {
+    position: absolute; top: 8px; right: 8px;
+    background: #fff; color: #333;
+    font-size: 10px; font-weight: 600;
+    padding: 3px 8px; border-radius: 20px;
+    white-space: nowrap;
+    border: 1px solid #e0e0e0;
+  }
+  .hv-thumb-empty {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    justify-content: center; padding: 14px 18px; gap: 7px;
+    opacity: 0.22;
+  }
+  .hv-thumb-line { height: 7px; background: #666; border-radius: 3px; }
+  .hv-card-footer { padding: 12px 14px 13px; }
+  .hv-card-name {
+    font-size: 13px; font-weight: 600; color: #1a1a1a;
+    margin-bottom: 5px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .hv-card-meta { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+  .hv-card-date { font-size: 11px; color: #bbb; }
+  .hv-type-badge {
+    font-size: 10px; font-weight: 600;
+    padding: 2px 8px; border-radius: 4px;
+    background: #f0f0f0; color: #888; flex-shrink: 0;
+  }
+
 </style>
 </head>
 <body>
 
+<!-- HOME VIEW -->
+<div class="home-view" id="homeView">
+
+  <div class="hv-sidebar">
+    <div class="hv-org">
+      <div class="hv-org-avatar">A</div>
+      <span class="hv-org-name">Acme Inc</span>
+    </div>
+    <nav class="hv-nav">
+      <button class="hv-nav-item">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Create
+      </button>
+      <button class="hv-nav-item">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        Search
+      </button>
+      <button class="hv-nav-item active">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        Home
+      </button>
+      <button class="hv-nav-item">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Recents
+      </button>
+      <button class="hv-nav-item">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+        All files
+      </button>
+    </nav>
+    <div class="hv-nav-divider"></div>
+    <div class="hv-section-header">Spaces</div>
+    <nav class="hv-nav" style="padding-top:4px;">
+      <button class="hv-nav-item">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        Product team
+      </button>
+      <button class="hv-nav-item">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        Marketing
+      </button>
+      <button class="hv-nav-item" style="color:#bbb;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Create space
+      </button>
+    </nav>
+    <div class="hv-sidebar-footer">
+      <div class="hv-user-avatar">P</div>
+      <span class="hv-user-name">Petri</span>
+    </div>
+  </div>
+
+  <div class="hv-main">
+    <h1 class="hv-greeting">Good morning, Petri</h1>
+    <p class="hv-sub">Here's everything in your workspace</p>
+    <div class="hv-filter-tabs">
+      <button class="hv-filter-tab active" data-filter="all" onclick="setHomeFilter('all')">All</button>
+      <button class="hv-filter-tab" data-filter="Presentation" onclick="setHomeFilter('Presentation')">Presentations</button>
+      <button class="hv-filter-tab" data-filter="Survey" onclick="setHomeFilter('Survey')">Surveys</button>
+      <button class="hv-filter-tab" data-filter="Pulse" onclick="setHomeFilter('Pulse')">Pulses</button>
+    </div>
+    <div id="hvContent"></div>
+  </div>
+
+</div>
+
+<!-- EDITOR VIEW -->
+<div class="editor-view" id="editorView" style="display:none;">
+
 <!-- TOP BAR -->
 <div class="topbar">
   <div class="topbar-left">
-    <button class="btn-icon" title="Back">
+    <button class="btn-icon" title="Back" onclick="showHomeView()">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
     </button>
     <div class="presentation-title">
-      <span style="font-size:14px;font-weight:600;color:#1a1a1a;">My presentation</span>
+      <span id="editorFileName" style="font-size:14px;font-weight:600;color:#1a1a1a;">My presentation</span>
       <span style="font-size:11px;color:#999;">My presentations</span>
     </div>
     <button class="btn-icon" title="Settings">
@@ -1005,7 +1261,7 @@
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
     </button>
     <button class="btn-start" id="btnPresent" onclick="startPresentation()">
-      Start presentation
+      <span id="btnPresentLabel">Start presentation</span>
       <span class="divider"></span>
       <span class="arrow">▼</span>
     </button>
@@ -1019,7 +1275,7 @@
   <div class="left-panel">
     <button class="btn-new-slide" onclick="addSlide()">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-      New slide
+      <span id="newSlideLabel">New slide</span>
     </button>
     <div class="slides-list" id="slidesList"></div>
   </div>
@@ -1087,71 +1343,132 @@
 
   </div>
 
-  <!-- INSIGHTS PANEL -->
-  <div class="insights-panel" id="insightsModal">
-    <div class="ip-inner">
-      <div class="ip-topbar">
-        <div class="ip-nav">
-          <button class="ip-nav-btn active" id="ipNavSummary" onclick="switchInsightsView('summary')">Summary</button>
-          <button class="ip-nav-btn" id="ipNavDetailed" onclick="switchInsightsView('detailed')">Detailed</button>
-        </div>
-        <button class="ip-close-btn" onclick="closeInsights()">✕</button>
-      </div>
 
-      <!-- Summary view -->
-      <div class="ip-view" id="ipViewSummary">
-        <div class="modal">
-          <div class="modal-header">
-            <div class="modal-meta">
-              <span class="modal-live-dot"></span> Session ended &nbsp;·&nbsp; Mar 27, 2026
+
+</div>
+
+</div><!-- /editor-view -->
+
+<!-- INSIGHTS PANEL (fixed, shared across home + editor views) -->
+<div class="insights-panel" id="insightsModal">
+  <div class="ip-inner">
+    <div class="ip-topbar">
+      <div class="ip-nav">
+        <button class="ip-nav-btn active" id="ipNavSummary" onclick="switchInsightsView('summary')">Summary</button>
+        <button class="ip-nav-btn" id="ipNavDetailed" onclick="switchInsightsView('detailed')">Detailed</button>
+      </div>
+      <button class="ip-close-btn" onclick="closeInsights()">✕</button>
+    </div>
+
+    <!-- Summary view -->
+    <div class="ip-view" id="ipViewSummary">
+      <div class="modal">
+        <div class="modal-header">
+          <div class="modal-meta">
+            <span class="modal-live-dot"></span> Session ended &nbsp;·&nbsp; Mar 27, 2026
+          </div>
+          <div class="modal-title" id="modalTitle" onclick="toggleInsightsState()">
+            <span id="modalTitleText">Untitled presentation</span>
+          </div>
+          <div class="modal-stats">
+            <div class="modal-stat">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              63 responses
             </div>
-            <div class="modal-title" id="modalTitle" onclick="toggleInsightsState()">
-              <span id="modalTitleText">Untitled presentation</span>
-            </div>
-            <div class="modal-stats">
-              <div class="modal-stat">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                63 responses
-              </div>
-              <div class="modal-stat">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-                91% completion
-              </div>
+            <div class="modal-stat">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+              91% completion
             </div>
           </div>
+        </div>
 
-          <!-- RICH STATE -->
-          <div class="modal-body" id="modalBodyRich">
+        <!-- RICH STATE -->
+        <div class="modal-body" id="modalBodyRich">
+          <div>
+            <div class="modal-section-label">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              Summary
+            </div>
+            <p class="modal-summary-text">Strong participation across both questions. The majority prefer starting their day with coffee (42%) and lean towards deep focus work blocks (55%). Responses were consistent and confident — no strong split or outliers.</p>
+          </div>
+          <div>
+            <div class="modal-section-label">Key findings</div>
+            <div class="modal-findings">
+              <div class="modal-finding"><div class="finding-num">1</div><span>"Coffee first" was the top morning habit at 42% — a clear majority preference</span></div>
+              <div class="modal-finding"><div class="finding-num">2</div><span>"Deep focus blocks" dominated work styles at 55%, suggesting your team values uninterrupted time</span></div>
+              <div class="modal-finding"><div class="finding-num">3</div><span>Only 9% go straight to work — most people need a transition ritual before starting</span></div>
+            </div>
+          </div>
+          <div class="modal-bottom">
+            <div>
+              <div class="modal-section-label">Suggested next steps</div>
+              <div class="modal-steps">
+                <div class="modal-step">
+                  <div class="step-icon">📤</div>
+                  <div class="step-text"><strong>Share results with the team</strong><span>Send a summary to all participants</span></div>
+                  <span class="step-arrow">→</span>
+                </div>
+                <div class="modal-step">
+                  <div class="step-icon">💬</div>
+                  <div class="step-text"><strong>Create a follow-up pulse</strong><span>Check in on team habits next week</span></div>
+                  <span class="step-arrow">→</span>
+                </div>
+              </div>
+            </div>
+            <button class="modal-cta" onclick="switchInsightsView('detailed')">
+              View detailed breakdown
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- CLEAN STATE -->
+        <div class="modal-body" id="modalBodyClean" style="display:none;">
+          <div class="insights-empty">
+            <div class="insights-empty-icon">🔍</div>
+            <div class="insights-empty-title">Not enough context yet</div>
+            <div class="insights-empty-sub">We know too little about your session to provide tailored insights and next steps. Tell us a bit more to get started.</div>
+          </div>
+          <div class="insights-dropdowns">
+            <div class="insights-dropdown-row">
+              <div class="insights-dropdown-label">What was your intent?</div>
+              <select class="insights-select" id="intentSelect" onchange="onCleanDropdownChange()">
+                <option value="">Select intent…</option>
+                <option value="feedback">Gather feedback</option>
+                <option value="educate">Educate the audience</option>
+                <option value="align">Align the team</option>
+                <option value="brainstorm">Brainstorm ideas</option>
+                <option value="checkin">Check in on wellbeing</option>
+              </select>
+            </div>
+            <div class="insights-dropdown-row">
+              <div class="insights-dropdown-label">What was your goal?</div>
+              <select class="insights-select" id="goalSelect" onchange="onCleanDropdownChange()">
+                <option value="">Select goal…</option>
+                <option value="engagement">Improve engagement</option>
+                <option value="decisions">Drive decisions</option>
+                <option value="satisfaction">Measure satisfaction</option>
+                <option value="inspire">Inspire action</option>
+                <option value="sentiment">Understand sentiment</option>
+              </select>
+            </div>
+          </div>
+          <div class="insights-populated" id="cleanPopulated">
             <div>
               <div class="modal-section-label">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
                 Summary
               </div>
-              <p class="modal-summary-text">Strong participation across both questions. The majority prefer starting their day with coffee (42%) and lean towards deep focus work blocks (55%). Responses were consistent and confident — no strong split or outliers.</p>
+              <p class="modal-summary-text" id="cleanSummaryText"></p>
             </div>
             <div>
               <div class="modal-section-label">Key findings</div>
-              <div class="modal-findings">
-                <div class="modal-finding"><div class="finding-num">1</div><span>"Coffee first" was the top morning habit at 42% — a clear majority preference</span></div>
-                <div class="modal-finding"><div class="finding-num">2</div><span>"Deep focus blocks" dominated work styles at 55%, suggesting your team values uninterrupted time</span></div>
-                <div class="modal-finding"><div class="finding-num">3</div><span>Only 9% go straight to work — most people need a transition ritual before starting</span></div>
-              </div>
+              <div class="modal-findings" id="cleanFindings"></div>
             </div>
             <div class="modal-bottom">
               <div>
                 <div class="modal-section-label">Suggested next steps</div>
-                <div class="modal-steps">
-                  <div class="modal-step">
-                    <div class="step-icon">📤</div>
-                    <div class="step-text"><strong>Share results with the team</strong><span>Send a summary to all participants</span></div>
-                    <span class="step-arrow">→</span>
-                  </div>
-                  <div class="modal-step">
-                    <div class="step-icon">💬</div>
-                    <div class="step-text"><strong>Create a follow-up pulse</strong><span>Check in on team habits next week</span></div>
-                    <span class="step-arrow">→</span>
-                  </div>
-                </div>
+                <div class="modal-steps" id="cleanSteps"></div>
               </div>
               <button class="modal-cta" onclick="switchInsightsView('detailed')">
                 View detailed breakdown
@@ -1159,74 +1476,15 @@
               </button>
             </div>
           </div>
-
-          <!-- CLEAN STATE -->
-          <div class="modal-body" id="modalBodyClean" style="display:none;">
-            <div class="insights-empty">
-              <div class="insights-empty-icon">🔍</div>
-              <div class="insights-empty-title">Not enough context yet</div>
-              <div class="insights-empty-sub">We know too little about your session to provide tailored insights and next steps. Tell us a bit more to get started.</div>
-            </div>
-            <div class="insights-dropdowns">
-              <div class="insights-dropdown-row">
-                <div class="insights-dropdown-label">What was your intent?</div>
-                <select class="insights-select" id="intentSelect" onchange="onCleanDropdownChange()">
-                  <option value="">Select intent…</option>
-                  <option value="feedback">Gather feedback</option>
-                  <option value="educate">Educate the audience</option>
-                  <option value="align">Align the team</option>
-                  <option value="brainstorm">Brainstorm ideas</option>
-                  <option value="checkin">Check in on wellbeing</option>
-                </select>
-              </div>
-              <div class="insights-dropdown-row">
-                <div class="insights-dropdown-label">What was your goal?</div>
-                <select class="insights-select" id="goalSelect" onchange="onCleanDropdownChange()">
-                  <option value="">Select goal…</option>
-                  <option value="engagement">Improve engagement</option>
-                  <option value="decisions">Drive decisions</option>
-                  <option value="satisfaction">Measure satisfaction</option>
-                  <option value="inspire">Inspire action</option>
-                  <option value="sentiment">Understand sentiment</option>
-                </select>
-              </div>
-            </div>
-
-            <!-- Populated content (shown once both dropdowns are selected) -->
-            <div class="insights-populated" id="cleanPopulated">
-              <div>
-                <div class="modal-section-label">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                  Summary
-                </div>
-                <p class="modal-summary-text" id="cleanSummaryText"></p>
-              </div>
-              <div>
-                <div class="modal-section-label">Key findings</div>
-                <div class="modal-findings" id="cleanFindings"></div>
-              </div>
-              <div class="modal-bottom">
-                <div>
-                  <div class="modal-section-label">Suggested next steps</div>
-                  <div class="modal-steps" id="cleanSteps"></div>
-                </div>
-                <button class="modal-cta" onclick="switchInsightsView('detailed')">
-                  View detailed breakdown
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-                </button>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
+    </div>
 
-      <!-- Detailed view -->
-      <div class="ip-view" id="ipViewDetailed" style="display:none;">
-        <div id="ipDetailContent"></div>
-      </div>
+    <!-- Detailed view -->
+    <div class="ip-view" id="ipViewDetailed" style="display:none;">
+      <div id="ipDetailContent"></div>
     </div>
   </div>
-
 </div>
 
 <!-- DOWNLOAD MODAL -->
@@ -1462,6 +1720,7 @@ const FILES = [
 ];
 
 let currentFileIndex = 0;
+let currentFileMode = 'presentation'; // 'presentation' | 'survey' | 'pulse'
 
 function selectFile(index) {
   currentFileIndex = index;
@@ -1676,6 +1935,10 @@ function thumbHTML(slide) {
   if (slide.type === 'title') {
     return `<div class="thumb-content"><div class="thumb-icon" style="font-size:16px;color:#888;font-weight:700;">T</div></div>`;
   }
+  if (currentFileMode === 'survey') {
+    const text = slide.question || 'Question';
+    return `<div class="thumb-content"><div class="thumb-question-only">${text}</div></div>`;
+  }
   const bars = slide.options.slice(0, 4).map((o, i) =>
     `<div class="thumb-bar" style="height:${6 + i * 2}px;background:${GRAY_SHADES[i % GRAY_SHADES.length]}"></div>`
   ).join('');
@@ -1707,13 +1970,43 @@ function renderOptions(options) {
   const labelsRow = document.getElementById('optionLabels');
   chart.innerHTML = '';
   labelsRow.innerHTML = '';
+
+  if (currentFileMode === 'survey') {
+    chart.classList.add('survey-chart');
+    labelsRow.classList.add('survey-labels');
+    const maxVotes = Math.max(...options.map(o => o.votes), 1);
+    const totalVotes = options.reduce((s, o) => s + o.votes, 0) || 1;
+    const sorted = [...options].sort((a, b) => b.votes - a.votes);
+    const shades = ['#333','#555','#777','#999','#bbb','#ccc'];
+    options.forEach((opt, i) => {
+      const pct = Math.round((opt.votes / maxVotes) * 100);
+      const rank = sorted.indexOf(opt) + 1;
+      const row = document.createElement('div');
+      row.className = 'survey-option-row';
+      row.innerHTML = `
+        <input class="survey-label" type="text" value="${opt.label}" placeholder="Option ${i+1}"
+          oninput="updateOptionLabel(${i}, this.value)" />
+        <div class="survey-bar-wrap">
+          <div class="survey-bar" style="width:${pct}%;background:${shades[i % shades.length]};"></div>
+        </div>
+        <span class="survey-count">${opt.votes}</span>
+        <button class="survey-remove-btn" onclick="removeOption(${i})">✕</button>
+      `;
+      row.addEventListener('mouseenter', e => showBarTooltip(e, i, opt, totalVotes, rank, options.length));
+      row.addEventListener('mouseleave', hideBarTooltip);
+      chart.appendChild(row);
+    });
+    return;
+  }
+
+  chart.classList.remove('survey-chart');
+  labelsRow.classList.remove('survey-labels');
   const maxVotes = Math.max(...options.map(o => o.votes), 1);
   const totalVotes = options.reduce((s, o) => s + o.votes, 0) || 1;
   const sorted = [...options].sort((a, b) => b.votes - a.votes);
   options.forEach((opt, i) => {
     const pct = Math.round((opt.votes / maxVotes) * 100);
     const rank = sorted.indexOf(opt) + 1;
-    // Bar column (count + bar)
     const col = document.createElement('div');
     col.className = 'option-col';
     col.style.cursor = 'default';
@@ -1725,7 +2018,6 @@ function renderOptions(options) {
     col.addEventListener('mouseenter', e => showBarTooltip(e, i, opt, totalVotes, rank, options.length));
     col.addEventListener('mouseleave', hideBarTooltip);
     chart.appendChild(col);
-    // Label below baseline
     const lbl = document.createElement('div');
     lbl.style.cssText = 'flex:1;min-width:0;';
     lbl.innerHTML = `<input class="option-label-input" type="text" value="${opt.label}" placeholder="Option ${i+1}"
@@ -1889,26 +2181,42 @@ function switchInsightsView(view) {
   if (view === 'detailed') renderInsightsPanelDetailed();
 }
 
+const QNA_QUESTIONS = [
+  { q: 'How do you feel about the current pace of the roadmap?', upvotes: 34, answered: true, time: '10:42 AM' },
+  { q: 'Will there be dedicated time for addressing tech debt next quarter?', upvotes: 28, answered: false, time: '10:48 AM' },
+  { q: 'What is the plan for onboarding new team members mid-sprint?', upvotes: 21, answered: true, time: '10:51 AM' },
+  { q: 'Can we revisit the design review process? It feels slow.', upvotes: 19, answered: false, time: '10:55 AM' },
+  { q: 'Is there a budget allocated for team offsites this year?', upvotes: 14, answered: true, time: '11:02 AM' },
+  { q: 'How are we tracking progress against OKRs between sessions?', upvotes: 11, answered: false, time: '11:06 AM' },
+  { q: 'Will the new tooling decision be shared with the full org?', upvotes: 7, answered: true, time: '11:10 AM' },
+  { q: 'Are there plans to increase cross-team collaboration on shared infra?', upvotes: 3, answered: false, time: '11:14 AM' },
+];
+
+let qnaSort = 'upvotes';
+
+function renderQnA() {
+  let sorted = [...QNA_QUESTIONS];
+  if (qnaSort === 'upvotes') sorted.sort((a, b) => b.upvotes - a.upvotes);
+  else if (qnaSort === 'newest') sorted.sort((a, b) => b.time.localeCompare(a.time));
+  else if (qnaSort === 'answered') sorted.sort((a, b) => b.answered - a.answered);
+
+  document.getElementById('qnaList').innerHTML = sorted.map(item => `
+    <div class="qna-item">
+      <div class="qna-question">${item.q}</div>
+      <div class="qna-meta">
+        <span class="qna-upvotes">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="18 15 12 9 6 15"/></svg>
+          ${item.upvotes}
+        </span>
+        <span class="qna-time">${item.time}</span>
+        ${item.answered ? '<span class="qna-badge">Answered</span>' : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
 function renderInsightsPanelDetailed() {
   const file = FILES[currentFileIndex];
-  const shades = ['#333','#666','#999','#bbb'];
-  const cardsHTML = file.slides.map(s => {
-    const maxPct = Math.max(...s.options.map(o => o.pct));
-    const barsHTML = s.options.map((o, i) => `
-      <div class="ih-mini-bar-wrap">
-        <div class="ih-mini-pct">${o.pct}%</div>
-        <div class="ih-mini-bar" style="height:${Math.round(o.pct/maxPct*100)}%;background:${shades[i % shades.length]};"></div>
-        <div class="ih-mini-label">${o.l}</div>
-      </div>`).join('');
-    return `<div class="ip-detail-card">
-      <div class="ip-detail-q">${s.q}</div>
-      <div class="ih-mini-chart">${barsHTML}</div>
-      <div class="ih-card-footer">
-        <span>${s.responses} responses</span>
-        <span>${s.participation}% participated</span>
-      </div>
-    </div>`;
-  }).join('');
 
   const compareOptions = COMPARE_FILES.map((f, i) =>
     `<option value="${i}">${f.name} — ${f.date}</option>`
@@ -1935,8 +2243,15 @@ function renderInsightsPanelDetailed() {
     </div>
     <div class="modal-body">
       <div>
-        <div class="modal-section-label">Results by slide</div>
-        <div style="display:flex;flex-direction:column;gap:12px;">${cardsHTML}</div>
+        <div class="modal-section-label" style="justify-content:space-between;">
+          <span>Q&amp;A</span>
+          <select class="qna-sort-select" onchange="qnaSort=this.value;renderQnA()">
+            <option value="upvotes">By upvotes</option>
+            <option value="newest">Newest</option>
+            <option value="answered">Answered</option>
+          </select>
+        </div>
+        <div id="qnaList" style="display:flex;flex-direction:column;gap:1px;margin-top:10px;"></div>
       </div>
       <div>
         <div class="modal-section-label">Compare with</div>
@@ -1948,12 +2263,26 @@ function renderInsightsPanelDetailed() {
           <div class="ip-compare-placeholder">Select a presentation above to compare</div>
         </div>
       </div>
-      <button class="modal-cta" onclick="openInsightsHome()">
-        Open full insights
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-      </button>
+      <div class="modal-bottom">
+        <div>
+          <div class="modal-section-label">Suggested next steps</div>
+          <div class="modal-steps">
+            <div class="modal-step">
+              <div class="step-icon">📤</div>
+              <div class="step-text"><strong>Share results with the team</strong><span>Send a summary to all participants</span></div>
+              <span class="step-arrow">→</span>
+            </div>
+            <div class="modal-step">
+              <div class="step-icon">💬</div>
+              <div class="step-text"><strong>Create a follow-up pulse</strong><span>Check in on team habits next week</span></div>
+              <span class="step-arrow">→</span>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   `;
+  renderQnA();
 }
 
 const COMPARE_FILES = [
@@ -2208,6 +2537,119 @@ function selectFormat(card) {
 selectFile(0);
 renderFileDropdownItems();
 init();
+
+// ── HOME VIEW ─────────────────────────────────────
+const HOME_FILES = [
+  // Presentations — mix with/without input
+  { name: 'Team Kickoff Q1',       type: 'Presentation', date: 'Mar 15, 2026', hasInput: true,  responses: 87,  fileDataIdx: 0, bars: [60,100,38,22] },
+  { name: 'All Hands — March',     type: 'Presentation', date: 'Mar 5, 2026',  hasInput: true,  responses: 201, fileDataIdx: 2, bars: [80,52,68,38,60] },
+  { name: 'Onboarding Day 1',      type: 'Presentation', date: 'Feb 28, 2026', hasInput: true,  responses: 31,  fileDataIdx: 3, bars: [88,42,28] },
+  { name: 'Product Demo Day',      type: 'Presentation', date: 'Apr 2, 2026',  hasInput: false },
+  { name: 'Q2 Planning Session',   type: 'Presentation', date: 'Apr 5, 2026',  hasInput: false },
+  // Surveys
+  { name: 'Product Feedback Survey', type: 'Survey', date: 'Mar 10, 2026', hasInput: true,  responses: 142, fileDataIdx: 1, bars: [65,44,52,28] },
+  { name: 'Employee NPS Q1',         type: 'Survey', date: 'Mar 3, 2026',  hasInput: true,  responses: 89,  fileDataIdx: 0, bars: [78,55,32] },
+  { name: 'Feature Prioritisation',  type: 'Survey', date: 'Apr 3, 2026',  hasInput: false },
+  { name: 'Customer Satisfaction',   type: 'Survey', date: 'Jan 20, 2026', hasInput: false },
+  // Pulses
+  { name: 'Weekly Team Pulse #12', type: 'Pulse', date: 'Apr 4, 2026',  hasInput: true,  responses: 23, fileDataIdx: 0, bars: [72,48,90] },
+  { name: 'Monthly Pulse — Feb',   type: 'Pulse', date: 'Feb 14, 2026', hasInput: true,  responses: 54, fileDataIdx: 1, bars: [58,82,44,70] },
+  { name: 'Wellbeing Check #8',    type: 'Pulse', date: 'Mar 28, 2026', hasInput: false },
+  { name: 'Friday Retro Pulse',    type: 'Pulse', date: 'Apr 7, 2026',  hasInput: false },
+];
+
+let currentHomeFilter = 'all';
+
+function setHomeFilter(filter) {
+  currentHomeFilter = filter;
+  document.querySelectorAll('.hv-filter-tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.filter === filter);
+  });
+  renderHvContent();
+}
+
+function renderHvContent() {
+  const types = currentHomeFilter === 'all'
+    ? ['Presentation', 'Survey', 'Pulse']
+    : [currentHomeFilter];
+
+  const shades = ['#555','#777','#999','#bbb'];
+  const typeLabels = { Presentation: 'Presentations', Survey: 'Surveys', Pulse: 'Pulses' };
+
+  document.getElementById('hvContent').innerHTML = types.map(type => {
+    const files = HOME_FILES.filter(f => f.type === type);
+    const cardsHTML = files.map((f, i) => {
+      const globalIdx = HOME_FILES.indexOf(f);
+      const thumbInner = f.hasInput
+        ? `<div class="hv-response-pill" onclick="event.stopPropagation();openInsightsFromHome(${globalIdx})">${f.responses} responses</div>`
+        : `<div class="hv-draft-pill">Draft</div>`;
+      return `<div class="hv-card" onclick="openEditorFromHome(${globalIdx})">
+        <div class="hv-card-thumb">${thumbInner}</div>
+        <div class="hv-card-footer">
+          <div class="hv-card-name">${f.name}</div>
+          <div class="hv-card-meta">
+            <span class="hv-card-date">${f.type}</span>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+    return `<div class="hv-section">
+      <div class="hv-section-title">${typeLabels[type]}</div>
+      <div class="hv-cards">${cardsHTML}</div>
+    </div>`;
+  }).join('');
+}
+
+function applyEditorMode(mode, fileName) {
+  currentFileMode = mode;
+  const editorView = document.getElementById('editorView');
+  const isSurvey = mode === 'survey';
+
+  editorView.classList.toggle('survey-mode', isSurvey);
+
+  document.getElementById('editorFileName').textContent = fileName || 'My presentation';
+  document.getElementById('btnPresentLabel').textContent = isSurvey ? 'Publish' : 'Start presentation';
+  document.getElementById('newSlideLabel').textContent = isSurvey ? 'New question' : 'New slide';
+
+  // Re-render with new mode
+  renderSlidesList();
+  const slide = slides[currentSlideIndex];
+  if (slide) renderOptions(slide.options);
+}
+
+function openEditorFromHome(idx) {
+  closeInsights();
+  const file = HOME_FILES[idx];
+  showEditorView();
+  applyEditorMode(file.type.toLowerCase(), file.name);
+}
+
+function openInsightsFromHome(idx) {
+  const file = HOME_FILES[idx];
+  currentFileIndex = file.fileDataIdx;
+  document.getElementById('modalTitleText').textContent = FILES[currentFileIndex].name;
+  insightsState = 'rich';
+  document.getElementById('modalBodyRich').style.display = '';
+  document.getElementById('modalBodyClean').style.display = 'none';
+  document.getElementById('insightsModal').classList.add('open');
+  switchInsightsView('summary');
+}
+
+function showHomeView() {
+  closeInsights();
+  document.getElementById('homeView').style.display = 'flex';
+  document.getElementById('editorView').style.display = 'none';
+  document.getElementById('editorView').classList.remove('survey-mode');
+  currentFileMode = 'presentation';
+  renderHvContent();
+}
+
+function showEditorView() {
+  document.getElementById('homeView').style.display = 'none';
+  document.getElementById('editorView').style.display = 'flex';
+}
+
+renderHvContent();
 </script>
 </body>
 </html>
